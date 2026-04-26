@@ -6,13 +6,28 @@ I build **autonomous trading systems, agentic tooling, and intelligence platform
 
 ## What I'm building now
 
-- **[Sapphire](https://github.com/arigatoexpress/Sapphire)** — autonomous trading + project-management + intelligence OS. 30 plugin tools, 1,273 unit tests, 20 always-on scheduled agents, a 4-tier inference proxy (Windows GPU → Pi mesh → Mac → Kimi Cloud) with sensitivity gating. Paper trading at 58% prediction accuracy (BTC 75%).
-- **[regional-intel-workbench](https://github.com/arigatoexpress/regional-intel-workbench)** — ethical regional-intelligence platform: client feeds, graph workflows, maps, public-source business intelligence.
 - **[Project-Go-Forward](https://github.com/arigatoexpress/Project-Go-Forward)** — multi-agent business-system framework for small businesses that want to own their stack (GCP + web UI). Powers client delivery.
-- **[cyber-threat-bot](https://github.com/arigatoexpress/cyber-threat-bot)** — CISA KEV + NVD + MITRE ATT&CK ingestion, brief generation, revenue-synthesis board.
-- **[tradingview-mcp](https://github.com/arigatoexpress/tradingview-mcp)** — MCP server that reads and controls TradingView Desktop (quotes, indicators, Pine compile, screenshots).
-- **[crypto-tax-tracker](https://github.com/arigatoexpress/crypto-tax-tracker)** — crypto tax engine.
+- **[tradingview-mcp-upstream](https://github.com/arigatoexpress/tradingview-mcp-upstream)** — AI-assisted TradingView chart automation bridge (fork-based upstream sync + local workflow tooling).
 - **[kadima-bench](https://github.com/arigatoexpress/kadima-bench)** — open-source local-LLM benchmarking framework for consumer GPUs (quality + latency + GPU resource monitoring).
+- **[Asterism](https://github.com/arigatoexpress/Asterism)** — active JavaScript codebase for current prototyping and agent experiments.
+- **[CodexFlow](https://github.com/arigatoexpress/CodexFlow)** — active workflow repo for Codex-oriented automation experiments.
+- **[DesktopOrganizer](https://github.com/arigatoexpress/DesktopOrganizer)** — AI-powered desktop file organizer.
+- **[claw-code](https://github.com/arigatoexpress/claw-code)** — maintained fork for fast-moving agent tooling experiments.
+
+## PR inbox snapshot (April 25, 2026)
+
+Checked open PR queues for active public repos:
+
+- `arigatoexpress/arigatoexpress`: **0 open**
+- `arigatoexpress/Project-Go-Forward`: **0 open**
+- `arigatoexpress/tradingview-mcp-upstream`: **0 open**
+- `arigatoexpress/kadima-bench`: **0 open**
+- `arigatoexpress/Asterism`: **0 open**
+- `arigatoexpress/CodexFlow`: **0 open**
+- `arigatoexpress/DesktopOrganizer`: **0 open**
+- `arigatoexpress/claw-code`: **0 open**
+
+**Where to pick up:** no open PRs are waiting for review right now; next best step is to open a new scoped PR in the highest-priority repo (likely `Project-Go-Forward` or `tradingview-mcp-upstream`) and continue from current local TODOs/issues.
 
 ## Focus
 
