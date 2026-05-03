@@ -1,45 +1,112 @@
+<div align="center">
+
 # Ari Spector · `arigatoexpress`
 
-I build **autonomous trading systems, agentic tooling, and intelligence platforms** — Telegram-first, agent-driven, deployed on a Mac + Pi + GPU mesh over Tailscale.
+**Building autonomous trading systems, agentic operating systems, and intelligence platforms.**
 
-- LinkedIn: [arispector](https://www.linkedin.com/in/arispector/)
+Telegram-first. Agent-driven. Deployed on a self-owned Mac + Windows GPU + Pi mesh over Tailscale.
 
-## What I'm building now
+[![Sapphire CI](https://github.com/arigatoexpress/Sapphire/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/arigatoexpress/Sapphire/actions/workflows/ci.yml)
+[![Sapphire Security](https://github.com/arigatoexpress/Sapphire/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/arigatoexpress/Sapphire/actions/workflows/security.yml)
 
-- **[Project-Go-Forward](https://github.com/arigatoexpress/Project-Go-Forward)** — multi-agent business-system framework for small businesses that want to own their stack (GCP + web UI). Powers client delivery.
-- **[tradingview-mcp-upstream](https://github.com/arigatoexpress/tradingview-mcp-upstream)** — AI-assisted TradingView chart automation bridge (fork-based upstream sync + local workflow tooling).
-- **[kadima-bench](https://github.com/arigatoexpress/kadima-bench)** — open-source local-LLM benchmarking framework for consumer GPUs (quality + latency + GPU resource monitoring).
-- **[Asterism](https://github.com/arigatoexpress/Asterism)** — active JavaScript codebase for current prototyping and agent experiments.
-- **[CodexFlow](https://github.com/arigatoexpress/CodexFlow)** — active workflow repo for Codex-oriented automation experiments.
-- **[DesktopOrganizer](https://github.com/arigatoexpress/DesktopOrganizer)** — AI-powered desktop file organizer.
-- **[claw-code](https://github.com/arigatoexpress/claw-code)** — maintained fork for fast-moving agent tooling experiments.
+</div>
 
-## PR inbox snapshot (April 25, 2026)
+---
 
-Checked open PR queues for active public repos:
+## 🏛️ Sapphire OS — flagship
 
-- `arigatoexpress/arigatoexpress`: **0 open**
-- `arigatoexpress/Project-Go-Forward`: **0 open**
-- `arigatoexpress/tradingview-mcp-upstream`: **0 open**
-- `arigatoexpress/kadima-bench`: **0 open**
-- `arigatoexpress/Asterism`: **0 open**
-- `arigatoexpress/CodexFlow`: **0 open**
-- `arigatoexpress/DesktopOrganizer`: **0 open**
-- `arigatoexpress/claw-code`: **0 open**
+> A self-sovereign operating system for capital intelligence, autonomous operations, and acquisition-grade diligence.
 
-**Where to pick up:** no open PRs are waiting for review right now; next best step is to open a new scoped PR in the highest-priority repo (likely `Project-Go-Forward` or `tradingview-mcp-upstream`) and continue from current local TODOs/issues.
+**[→ arigatoexpress/Sapphire](https://github.com/arigatoexpress/Sapphire)**
 
-## Focus
+Bloomberg charges $24K/seat to read; Glassnode shows you charts; Datadog watches your servers. Sapphire does all three plus autonomous trading, content publishing, and a fail-closed kill switch — on hardware we own, with code you can audit.
 
-- **Trading:** autonomous signal generation, paper + live execution, 80%+ win-rate target, Sortino/Calmar over Sharpe.
-- **Agentic systems:** multi-tier inference dispatch (free local → paid cloud), token-governed, with sensitivity-classifier firewall before anything leaves the machine.
-- **Client delivery:** THO (Texas Home Outlet) and regional intelligence clients — production Cloud Run services, accountable SLAs.
-- **Security & compliance:** NIST CSF 2.0 + AI RMF alignment, threat intel pipelines, defensive posture.
+### Proof
 
-## Working style
+| Metric | Value |
+|---|---|
+| Passing tests | **6,735+** (6,140 unit · 595 plugin) |
+| Test files | **392** |
+| Plugin tools | **72** registered · 17 agent-facing |
+| Dashboard pages | **50** (Flask + SSE + `/showcase` front door) |
+| LaunchAgents | **27** macOS plists + Windows scheduled tasks |
+| Quant strategies | **7** Python + **5** Pine v5 |
+| Smart contracts | **3** Solidity (Robinhood Chain testnet, ID 46630) |
+| Data feeds | **20+** market · on-chain · macro · threat · counter-party |
+| Inference mesh | **4 tiers** · 28 models · RTX 5070 Ti + Pi cluster + Kimi cloud |
+| Live trading | First BTC fill 2026-04-28 ($5 @ $76,774.81) · 14-day Sortino soak before $50 rung |
+| Prediction accuracy | **61.1%** overall, **BTC 83.3%** (n=36 scored of 42) |
+
+### Architecture at a glance
+
+```mermaid
+flowchart LR
+    TV[TradingView Pine] -->|webhook| Win[Windows GPU] --> SL[Signal Logger]
+    SL --> RK[Risk Kernel<br/>kill-switch · ATR · VPIN]
+    RK --> CF[Confirmation Firewall<br/>2-phase commit]
+    CF --> Paper[Paper Book] & RH[Robinhood Crypto] & HL[Hyperliquid]
+    Bus[(Event Bus<br/>Redis · JSONL fallback)]
+    SL --> Bus --> Brain[Brain · /api/brain/synthesis]
+    Brain --> Dashboard[Dashboard · 50 pages] & Content[Content Engine] & Telegram
+```
+
+### What sets it apart
+
+| | Sapphire | Bloomberg | Glassnode | Datadog |
+|---|---|---|---|---|
+| Cost / seat | **$0** (own hardware) | $24K/yr | $799/mo | per-host SaaS |
+| Self-sovereign runtime | **✓** | ✗ | ✗ | ✗ |
+| Autonomous trading + kill switch | **✓** | ✗ | ✗ | ✗ |
+| On-chain analytics (24+ providers) | **✓** | ✗ | ✓ | ✗ |
+| Threat intel (CISA · NVD · ATT&CK) | **✓** | ✗ | ✗ | ✗ |
+| Content engine w/ 7-check rubric | **✓** | ✗ | ✗ | ✗ |
+| Acquisition-grade diligence dashboard | **✓** | ✗ | ✗ | ✗ |
+
+---
+
+## 🛰️ Satellite repos
+
+Sapphire is the orchestration layer. Satellites stand alone but the Brain unites them.
+
+| Repo | Role |
+|---|---|
+| **[cyber-threat-bot](https://github.com/arigatoexpress/cyber-threat-bot)** | CISA KEV / NVD / MITRE aggregator — live on Cloud Run |
+| **[regional-intel-workbench](https://github.com/arigatoexpress/regional-intel-workbench)** | Public-source analyst console at regional.sapphirealpha.xyz |
+| **[wildfire-watch](https://github.com/arigatoexpress/wildfire-watch)** | County-scale autonomous drone fleet (Sapphire bridge merged) |
+| **[Project-Go-Forward](https://github.com/arigatoexpress/Project-Go-Forward)** | THO client PM — customer/deal/doc CRM, Cloud Run deployed |
+| **[tradingview-mcp](https://github.com/arigatoexpress/tradingview-mcp)** | 78-tool TradingView CDP bridge |
+| **[crypto-tax-tracker](https://github.com/arigatoexpress/crypto-tax-tracker)** | Crypto tax engine |
+| **[claw-code](https://github.com/arigatoexpress/claw-code)** | Rust agent runtime that hosts `claw-sapphire` plugin |
+| **[kadima-bench](https://github.com/arigatoexpress/kadima-bench)** | Open-source local-LLM benchmarking for consumer GPUs |
+
+---
+
+## 🎯 Current focus (May 2026)
+
+- **Hyperliquid mainnet activation** — gated on `signing_verified=True`, $5/order cap, fail-closed by default
+- **Cross-chain protocol stack** — MegaETH (4326) · Arbitrum (42161) · Optimism (10) — Aave V3 + GMX V2 + Pyth oracle redundancy
+- **Autonomous organization** — 6-role C-suite engine (CEO/CTO/CIO/COO/RD/CS) with compute mesh and knowledge graph
+- **Hackathon submissions** — 0G APAC Hackathon (Track 2, deadline 2026-05-16) · Arbitrum London Buildathon (2026-06-14)
+- **Content engine soak** — 7-cycle institutional rubric gate before publishing
+
+---
+
+## 🧠 Working style
 
 Every repo has an `AGENTS.md` (or `CLAUDE.md`) with the fast path: what to read first, key paths, dev commands. Code is agent-ready — tools drop in, discipline travels.
 
-## Archived / superseded
+**Stack:** Python 3.11+ · Flask · Redis · Ollama · Tailscale · GCP · Solidity · Pine Script v5 · TypeScript
 
-`SapphireAI`, `AsterAI` → merged into **Sapphire**. `quant-ai-trader`, `binance-trade-bot`, `freqtrade*`, `tensortrade`, `FreedomBot`, `fullsail_scanner`, `CRM`, `ari_gato_binance_bot` → retired or consolidated.
+**Principles:**
+- PnL is king. Sortino/Calmar over Sharpe. 80%+ win-rate target.
+- Fail closed at every layer — trading, security, inference, content.
+- Every artifact has a verdict + provenance.
+- No AI slop. Every claim verifiable from the diff or the data.
+
+---
+
+## 📬 Contact
+
+- LinkedIn: [arispector](https://www.linkedin.com/in/arispector/)
+- Live brain: [sapphirealpha.xyz/api/brain/synthesis](https://sapphirealpha.xyz/api/brain/synthesis)
+- Public face: [sapphirealpha.xyz](https://sapphirealpha.xyz)
