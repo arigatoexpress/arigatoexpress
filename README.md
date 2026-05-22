@@ -4,7 +4,7 @@
 
 **Building autonomous trading systems, agentic operating systems, and intelligence platforms.**
 
-Telegram-first. Agent-driven. Deployed on a self-owned Mac + Windows GPU + Pi mesh over Tailscale.
+Encryption-first. Agent-driven.
 
 [![Sapphire CI](https://github.com/arigatoexpress/Sapphire/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/arigatoexpress/Sapphire/actions/workflows/ci.yml)
 [![Sapphire Security](https://github.com/arigatoexpress/Sapphire/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/arigatoexpress/Sapphire/actions/workflows/security.yml)
