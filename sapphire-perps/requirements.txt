@@ -1,0 +1,14 @@
+# Core runtime (stdlib does most of the work).
+pyyaml>=6.0
+
+# Optional venue SDKs — install only what you trade.
+#   pip install -e ".[hyperliquid]"   # Hyperliquid live
+#   pip install -e ".[lighter]"       # Lighter live
+#
+# hyperliquid-python-sdk>=0.9
+# eth-account>=0.10
+# lighter-sdk>=0.1
+
+# Dev
+pytest>=8.0
+ruff>=0.5

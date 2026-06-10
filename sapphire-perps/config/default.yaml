@@ -1,0 +1,44 @@
+# Sapphire Perps — default configuration (paper, fail-closed).
+#
+# Secrets (API keys, wallet keys) are NEVER read from this file — only from the
+# environment. See .env.example.
+
+# "paper" (simulated) or "live" (real orders). Live ALSO requires allow_live.
+exec_mode: paper
+
+# Master live switch. Even with exec_mode: live, nothing real happens unless
+# this is true. Two independent flags = harder to enable real money by accident.
+allow_live: false
+
+base_currency: USD
+default_venue: hyperliquid
+poll_interval_s: 15
+
+# Paper-trading simulation parameters.
+paper_starting_equity_usd: 100000
+paper_slippage_bps: 2
+
+# Hard pre-trade limits enforced by the risk kernel. Any breach -> reject.
+risk:
+  max_order_notional_usd: 5000
+  min_order_notional_usd: 10
+  max_position_notional_usd: 25000
+  max_total_notional_usd: 100000
+  max_leverage: 10
+  max_open_positions: 5
+  daily_loss_limit_usd: 2000
+  allowed_symbols:
+    - BTC
+    - ETH
+    - SOL
+
+venues:
+  hyperliquid:
+    enabled: true
+    testnet: true      # use Hyperliquid testnet for live runs until proven
+  lighter:
+    enabled: false     # paper-capable; live routing not wired yet
+    testnet: true
+  robinhood:
+    enabled: false     # equities-only today; perps not offered yet
+    testnet: true
