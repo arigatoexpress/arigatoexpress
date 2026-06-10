@@ -89,3 +89,13 @@ def test_marketable_limit_fills(broker):
     )
     assert res.status is OrderStatus.FILLED
     assert broker.get_account().position_for("BTC").size == 1.0
+
+
+def test_marketable_limit_fills_at_book_not_cap(broker):
+    # ask is 100k (spread 0); a buy limit at 105k is marketable and must fill at
+    # the book (~100k), NOT at the 105k cap.
+    res = broker.place_order(
+        Order("BTC", Side.LONG, 1.0, order_type=OrderType.LIMIT, limit_price=105_000)
+    )
+    assert res.status is OrderStatus.FILLED
+    assert res.avg_price == 100_000  # book price, slippage 0 in this fixture

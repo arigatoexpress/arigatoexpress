@@ -70,6 +70,21 @@ def test_rejects_excess_leverage(kernel):
     assert any("leverage" in r for r in d.reasons)
 
 
+def test_enforces_leverage_without_explicit_field(kernel):
+    # $5k order within notional caps, but only $100 equity -> 50x >> 10x cap.
+    acct = AccountState(venue="paper", equity=100, free_collateral=100, positions=[])
+    d = kernel.evaluate(Order("BTC", Side.LONG, 0.05), 100_000, acct)  # no leverage set
+    assert not d.approved
+    assert any("effective leverage" in r for r in d.reasons)
+
+
+def test_rejects_non_positive_equity(kernel):
+    acct = AccountState(venue="paper", equity=0, free_collateral=0, positions=[])
+    d = kernel.evaluate(Order("BTC", Side.LONG, 0.001), 100_000, acct)
+    assert not d.approved
+    assert any("equity" in r for r in d.reasons)
+
+
 def test_resulting_position_cap(kernel):
     acct = AccountState(
         venue="paper", equity=100_000, free_collateral=100_000,

@@ -43,13 +43,16 @@ class PaperBroker:
         return self.price_source.quote(symbol)
 
     def _fill_price(self, order: Order, quote: Quote) -> float:
-        if order.order_type is OrderType.LIMIT and order.limit_price is not None:
-            base = order.limit_price
-        else:
-            base = quote.ask if order.side is Side.LONG else quote.bid
+        # A marketable limit takes liquidity at the BOOK (ask for a buy, bid for
+        # a sell), not at the user's worst-acceptable limit price. Slippage works
+        # against the taker, but the fill is then capped by the limit so it can
+        # never be worse than what the order authorised.
+        base = quote.ask if order.side is Side.LONG else quote.bid
         slip = base * (self.slippage_bps / 1e4)
-        # Slippage always works against the taker.
-        return base + slip if order.side is Side.LONG else base - slip
+        fill = base + slip if order.side is Side.LONG else base - slip
+        if order.order_type is OrderType.LIMIT and order.limit_price is not None:
+            fill = min(fill, order.limit_price) if order.side is Side.LONG else max(fill, order.limit_price)
+        return fill
 
     # -- execution -----------------------------------------------------
     def place_order(self, order: Order) -> OrderResult:

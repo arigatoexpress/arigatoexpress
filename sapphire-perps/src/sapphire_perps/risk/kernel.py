@@ -126,6 +126,24 @@ class RiskKernel:
                     f"${lim.max_total_notional_usd:,.2f}"
                 )
 
+            # Account leverage cap. The per-order `order.leverage` check above is
+            # opt-in; the normal CLI/engine path omits it. Enforce the cap from
+            # the actual ratio of post-trade notional to equity so leverage is
+            # always bounded, not just when a caller remembers to set the field.
+            if account.equity <= 0:
+                reasons.append(
+                    f"non-positive account equity (${account.equity:,.2f}); "
+                    "cannot size order"
+                )
+            else:
+                effective_leverage = projected_total / account.equity
+                if effective_leverage > lim.max_leverage:
+                    reasons.append(
+                        f"effective leverage {effective_leverage:.2f}x "
+                        f"(${projected_total:,.2f} / ${account.equity:,.2f} equity) "
+                        f"exceeds max {lim.max_leverage}x"
+                    )
+
             if self._opens_new_position(order, account):
                 if account.open_position_count >= lim.max_open_positions:
                     reasons.append(
