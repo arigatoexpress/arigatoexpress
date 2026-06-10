@@ -82,8 +82,24 @@ class RiskKernel:
 
         order_notional = order.size * price
 
-        # Increase-only checks are skipped for reduce-only orders, which can
-        # only shrink risk.
+        # --- reduce-only validity ---------------------------------------
+        # A reduce_only order is exempt from the increase-only limits below, so
+        # we must PROVE it actually reduces. It reduces only when there is an
+        # existing position on the OPPOSITE side. With no position, or one on
+        # the same side, "reduce_only" would instead open/increase exposure —
+        # reject it rather than let it bypass the caps.
+        if order.reduce_only:
+            existing = account.position_for(order.symbol)
+            if existing is None or existing.size == 0:
+                reasons.append("reduce_only order but no open position to reduce")
+            elif existing.side is order.side:
+                reasons.append(
+                    f"reduce_only order on same side as existing {order.symbol} "
+                    "position would increase exposure, not reduce it"
+                )
+
+        # Increase-only checks are skipped for (validated) reduce-only orders,
+        # which can only shrink risk.
         if not order.reduce_only:
             if order_notional < lim.min_order_notional_usd:
                 reasons.append(

@@ -179,11 +179,20 @@ class HyperliquidAdapter(VenueAdapter):
     def _live_place_order(self, order: Order) -> OrderResult:  # pragma: no cover
         ex = self._exchange
         is_buy = order.side is Side.LONG
+        slippage = 0.01  # 1% marketable band
         try:
-            if order.order_type is OrderType.MARKET:
-                resp = ex.market_open(
-                    order.symbol, is_buy, order.size, None,
-                    0.01,  # default 1% slippage cap
+            if order.order_type is OrderType.MARKET and not order.reduce_only:
+                resp = ex.market_open(order.symbol, is_buy, order.size, None, slippage)
+            elif order.order_type is OrderType.MARKET and order.reduce_only:
+                # `market_open` does NOT carry reduce_only, so a market reduce
+                # could flip/increase the position. Instead send an aggressive
+                # IOC limit with reduce_only=True so the venue enforces it.
+                mid = float(self._info.all_mids()[order.symbol])
+                px = mid * (1 + slippage) if is_buy else mid * (1 - slippage)
+                # NOTE: production should round px to the asset's tick size.
+                resp = ex.order(
+                    order.symbol, is_buy, order.size, px,
+                    {"limit": {"tif": "Ioc"}}, reduce_only=True,
                 )
             else:
                 resp = ex.order(

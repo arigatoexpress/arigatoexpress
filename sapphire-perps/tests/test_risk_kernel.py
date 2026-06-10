@@ -115,3 +115,22 @@ def test_daily_loss_breaker_blocks_new_but_allows_reduce(kernel):
         Order("BTC", Side.SHORT, 0.05, reduce_only=True), 100_000, acct, daily_pnl=-1_500
     )
     assert reduce.approved is True
+
+
+def test_reduce_only_without_position_rejected(kernel):
+    d = kernel.evaluate(
+        Order("BTC", Side.SHORT, 0.05, reduce_only=True), 100_000, empty_account()
+    )
+    assert not d.approved
+    assert any("no open position to reduce" in r for r in d.reasons)
+
+
+def test_reduce_only_same_side_rejected(kernel):
+    # reduce_only LONG against an existing LONG would *increase* exposure.
+    acct = AccountState(
+        venue="paper", equity=100_000, free_collateral=100_000,
+        positions=[Position("BTC", "paper", Side.LONG, 0.05, 100_000, 100_000)],
+    )
+    d = kernel.evaluate(Order("BTC", Side.LONG, 0.05, reduce_only=True), 100_000, acct)
+    assert not d.approved
+    assert any("same side" in r for r in d.reasons)
