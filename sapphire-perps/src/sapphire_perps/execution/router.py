@@ -62,12 +62,18 @@ class OrderRouter:
         quote = adapter.get_quote(order.symbol)
         if quote is None:
             return self._reject(order, f"no quote for {order.symbol}", venue_name)
-        # Evaluate risk at the price the order would actually execute at, not the
-        # mid: a market buy lifts the ask, a market sell hits the bid. Using the
-        # worst-case touch keeps notional/leverage caps honest (a fill can't
-        # sneak above a hard limit that was only checked at the mid).
+        # Evaluate risk at the WORST-CASE executable price, not the mid, so a
+        # fill can't sneak above a hard limit that was only checked at the mid.
+        # - Market buy lifts the ask, market sell hits the bid.
+        # - A marketable limit fills at the touch (ask/bid), which can be worse
+        #   than the limit price; a resting limit fills no worse than its limit.
+        #   Highest-notional fill: buy -> min(ask, limit); sell -> max(bid, limit).
         if order.order_type is OrderType.LIMIT and order.limit_price is not None:
-            price = order.limit_price
+            price = (
+                min(quote.ask, order.limit_price)
+                if order.side is Side.LONG
+                else max(quote.bid, order.limit_price)
+            )
         else:
             price = quote.ask if order.side is Side.LONG else quote.bid
 

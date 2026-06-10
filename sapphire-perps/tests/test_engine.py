@@ -80,6 +80,31 @@ def test_engine_run_bounded_steps():
     engine.run(max_steps=3)  # should not raise
 
 
+def test_engine_sizes_at_ask_so_cap_hugging_long_opens():
+    # Venue with a 2bps spread; signal targets exactly the max order notional.
+    # Sizing off the ask (not the mid) keeps the executable notional within the
+    # cap so the order isn't rejected by the router's ask-based risk check.
+    cfg = AppConfig(
+        risk=RiskLimits(
+            allowed_symbols=["BTC"], max_order_notional_usd=5_000,
+            max_position_notional_usd=5_000, max_total_notional_usd=5_000,
+        ),
+        default_venue="paper",
+    )
+
+    class SpreadVenue(PaperVenue):
+        def __init__(self):
+            self.src = StaticPriceSource("paper", {"BTC": 100_000.0}, spread_bps=2.0)
+            self.broker = PaperBroker("paper", self.src, starting_equity=1_000_000, slippage_bps=0.0)
+
+    venue = SpreadVenue()
+    router = OrderRouter({"paper": venue}, RiskKernel(cfg.risk), cfg, AutoDenyGate())
+    engine = Engine(cfg, router, TargetSignal(Side.LONG, 5_000.0), symbols=["BTC"], venue="paper")
+    results = engine.step()
+    assert results and all(r.ok for r in results), [r.reason for r in results]
+    assert venue.get_account().position_for("BTC").side is Side.LONG
+
+
 class TargetSignal:
     """A signal whose target can be changed between steps."""
 

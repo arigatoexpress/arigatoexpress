@@ -64,7 +64,12 @@ class Engine:
             return None
 
         side = Side.LONG if delta_notional > 0 else Side.SHORT
-        size = abs(delta_notional) / quote.mid
+        # Size off the executable price (ask for a buy, bid for a sell), the same
+        # price the router uses for risk. Sizing off the mid would make a buy's
+        # notional-at-the-ask exceed the target and trip the order cap for a
+        # signal that targets exactly the max notional.
+        exec_price = quote.ask if side is Side.LONG else quote.bid
+        size = abs(delta_notional) / exec_price
 
         # Mark reduce_only ONLY when this order purely shrinks the existing
         # position without crossing zero (same-side smaller target, or a flat

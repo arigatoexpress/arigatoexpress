@@ -3,7 +3,7 @@ from sapphire_perps.config import AppConfig, ExecMode, RiskLimits
 from sapphire_perps.execution.approval import AutoApproveGate, AutoDenyGate
 from sapphire_perps.execution.router import OrderRouter
 from sapphire_perps.risk.kernel import RiskKernel
-from sapphire_perps.types import Order, OrderStatus, Side
+from sapphire_perps.types import Order, OrderStatus, OrderType, Side
 from sapphire_perps.venues.base import StaticPriceSource, VenueAdapter
 from sapphire_perps.venues.paper import PaperBroker
 
@@ -134,6 +134,19 @@ def test_market_risk_uses_executable_price():
     # spread_bps=2000 -> ask = 110,000. 0.0999 BTC is $9,990 at the mid (under
     # the $10k cap) but $10,989 at the ask (over) -> must reject on the ask.
     res = router.submit(Order("BTC", Side.LONG, 0.0999))
+    assert res.status is OrderStatus.REJECTED
+    assert "risk:" in res.reason
+
+
+def test_marketable_short_limit_risk_checked_at_bid():
+    # Sell limit below the bid is marketable and fills at the bid, not the limit.
+    # Risk must use the bid so the notional cap can't be dodged with a low limit.
+    cfg = make_config()
+    cfg.risk.max_order_notional_usd = 9_500  # bid notional $10k must exceed this
+    router = make_router(cfg, {"fake": FakePaperVenue()})  # bid == 100k (spread 0)
+    res = router.submit(
+        Order("BTC", Side.SHORT, 0.1, order_type=OrderType.LIMIT, limit_price=90_000)
+    )
     assert res.status is OrderStatus.REJECTED
     assert "risk:" in res.reason
 
