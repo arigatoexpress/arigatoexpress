@@ -59,6 +59,7 @@ class HyperliquidAdapter(VenueAdapter):
         self.is_live = config.is_live
         self._info = None  # lazily constructed SDK Info client
         self._exchange = None  # lazily constructed SDK Exchange client
+        self._sz_decimals: dict[str, int] = {}  # per-asset lot precision cache
 
         if self.is_live:
             self._init_live()
@@ -187,13 +188,41 @@ class HyperliquidAdapter(VenueAdapter):
             return px
         return round(float(f"{px:.5g}"), max_decimals)
 
+    @staticmethod
+    def _round_size(size: float, sz_decimals: int) -> float:
+        """Truncate a size to the asset's lot precision (szDecimals). We floor
+        (never round up) so the submitted size can't exceed the risk-checked
+        size — keeping notional/leverage caps conservative."""
+        import math
+
+        factor = 10 ** sz_decimals
+        return math.floor(abs(size) * factor) / factor
+
+    def _sz_decimals_for(self, symbol: str) -> int:  # pragma: no cover - network
+        if symbol not in self._sz_decimals:
+            try:
+                meta = self._info.meta()  # type: ignore[union-attr]
+                for asset in meta.get("universe", []):
+                    self._sz_decimals[asset["name"]] = int(asset.get("szDecimals", 0))
+            except Exception:
+                pass
+        return self._sz_decimals.get(symbol, 0)
+
     def _live_place_order(self, order: Order) -> OrderResult:  # pragma: no cover
         ex = self._exchange
         is_buy = order.side is Side.LONG
         slippage = 0.01  # 1% marketable band
+        # Truncate to lot precision so Hyperliquid doesn't reject an invalid
+        # size. Floor keeps it <= the risk-checked size.
+        size = self._round_size(order.size, self._sz_decimals_for(order.symbol))
+        if size <= 0:
+            return OrderResult(
+                order, OrderStatus.REJECTED, self.name,
+                reason="size below the asset's lot precision (rounds to 0)",
+            )
         try:
             if order.order_type is OrderType.MARKET and not order.reduce_only:
-                resp = ex.market_open(order.symbol, is_buy, order.size, None, slippage)
+                resp = ex.market_open(order.symbol, is_buy, size, None, slippage)
             elif order.order_type is OrderType.MARKET and order.reduce_only:
                 # `market_open` does NOT carry reduce_only, so a market reduce
                 # could flip/increase the position. Instead send an aggressive
@@ -202,14 +231,14 @@ class HyperliquidAdapter(VenueAdapter):
                 raw_px = mid * (1 + slippage) if is_buy else mid * (1 - slippage)
                 px = self._round_px(raw_px)
                 resp = ex.order(
-                    order.symbol, is_buy, order.size, px,
+                    order.symbol, is_buy, size, px,
                     {"limit": {"tif": "Ioc"}}, reduce_only=True,
                 )
             else:
                 resp = ex.order(
                     order.symbol,
                     is_buy,
-                    order.size,
+                    size,
                     order.limit_price,
                     {"limit": {"tif": "Gtc"}},
                     reduce_only=order.reduce_only,
