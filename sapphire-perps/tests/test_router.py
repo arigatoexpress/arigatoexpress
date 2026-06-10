@@ -123,6 +123,17 @@ def test_non_perp_venue_rejects_perp_order():
     assert "does not support perps" in res.reason
 
 
+def test_close_blocked_on_live_adapter_when_not_cleared():
+    # Live adapter but system not cleared for live -> close must be rejected
+    # before reaching the venue, mirroring submit()'s two-switch gate.
+    cfg = make_config(default_venue="fakelive")
+    cfg.exec_mode = ExecMode.PAPER
+    router = make_router(cfg, {"fakelive": FakeLiveVenue()}, approval=AutoApproveGate())
+    res = router.close("BTC")
+    assert res.status is OrderStatus.REJECTED
+    assert "not cleared for live" in res.reason
+
+
 def test_daily_loss_breaker_trips_from_derived_pnl():
     # The router must derive session PnL itself (no external caller feeding it).
     cfg = make_config()

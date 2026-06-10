@@ -101,8 +101,16 @@ class OrderRouter:
         if adapter is None:
             return self._reject(placeholder, f"venue {venue_name!r} not available", venue_name)
 
-        # Closing reduces risk, but live orders still pass the human gate.
+        # Closing reduces risk, but live orders face the same two-switch gate
+        # and human approval as opening orders.
         if adapter.is_live:
+            if not self.config.is_live:
+                return self._reject(
+                    placeholder,
+                    "live adapter but system not cleared for live "
+                    "(need exec_mode=live AND allow_live=true)",
+                    venue_name,
+                )
             quote = adapter.get_quote(symbol)
             price = quote.mid if quote else 0.0
             if not self.approval.request(placeholder, RiskDecision.approve("close"), price):
