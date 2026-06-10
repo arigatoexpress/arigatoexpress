@@ -118,6 +118,8 @@ def cmd_trade(cfg: AppConfig, args: argparse.Namespace) -> int:
 
 
 def cmd_run(cfg: AppConfig, args: argparse.Namespace) -> int:
+    if args.venue:
+        cfg.default_venue = args.venue
     engine = build_engine(cfg)
     engine.run(max_steps=args.steps)
     return 0
@@ -127,24 +129,31 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="sapphire-perps", description=__doc__)
     p.add_argument("-c", "--config", default=DEFAULT_CONFIG, help="config file path")
     p.add_argument("-v", "--verbose", action="store_true")
-    p.add_argument("--venue", help="override venue for this command")
     sub = p.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("status", help="show config, venues, and risk limits")
+    # Shared `--venue` so it works AFTER the subcommand (as the docs show),
+    # e.g. `sapphire-perps trade BTC long 0.01 --venue hyperliquid`.
+    venue_parent = argparse.ArgumentParser(add_help=False)
+    venue_parent.add_argument("--venue", help="override venue for this command")
 
-    sp = sub.add_parser("quote", help="get a quote")
+    sub.add_parser("status", parents=[venue_parent], help="show config, venues, and risk limits")
+
+    sp = sub.add_parser("quote", parents=[venue_parent], help="get a quote")
     sp.add_argument("symbol")
 
-    sub.add_parser("positions", help="list open positions")
+    sub.add_parser("positions", parents=[venue_parent], help="list open positions")
 
-    sp = sub.add_parser("trade", help="submit an order (paper unless live cleared)")
+    sp = sub.add_parser(
+        "trade", parents=[venue_parent],
+        help="submit an order (paper unless live cleared)",
+    )
     sp.add_argument("symbol")
     sp.add_argument("side", choices=["long", "short"])
     sp.add_argument("size", type=float)
     sp.add_argument("--limit", type=float, help="limit price (omit for market)")
     sp.add_argument("--reduce-only", action="store_true")
 
-    sp = sub.add_parser("run", help="run the engine loop")
+    sp = sub.add_parser("run", parents=[venue_parent], help="run the engine loop")
     sp.add_argument("--steps", type=int, default=None, help="number of steps (default: forever)")
 
     return p

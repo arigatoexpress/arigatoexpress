@@ -237,20 +237,36 @@ class HyperliquidAdapter(VenueAdapter):
 
     def _live_positions(self) -> list[Position]:  # pragma: no cover
         state = self._info.user_state(self._address)  # type: ignore[union-attr]
+        try:
+            mids = self._info.all_mids()  # type: ignore[union-attr]
+        except Exception:
+            mids = {}
         out: list[Position] = []
         for ap in state.get("assetPositions", []):
             p = ap.get("position", {})
             szi = float(p.get("szi", 0) or 0)
             if szi == 0:
                 continue
+            coin = p["coin"]
+            entry = float(p.get("entryPx", 0) or 0)
+            # Mark at the CURRENT mid so risk limits (which sum pos.notional)
+            # reflect live exposure, not stale entry. Prefer all_mids; fall back
+            # to the venue's positionValue, then entry as a last resort.
+            mark = 0.0
+            if coin in mids:
+                mark = float(mids[coin])
+            elif p.get("positionValue"):
+                mark = abs(float(p["positionValue"])) / abs(szi)
+            if mark <= 0:
+                mark = entry
             out.append(
                 Position(
-                    symbol=p["coin"],
+                    symbol=coin,
                     venue=self.name,
                     side=Side.LONG if szi > 0 else Side.SHORT,
                     size=abs(szi),
-                    entry_price=float(p.get("entryPx", 0) or 0),
-                    mark_price=float(p.get("entryPx", 0) or 0),
+                    entry_price=entry,
+                    mark_price=mark,
                     leverage=float(p.get("leverage", {}).get("value", 1) or 1),
                 )
             )
