@@ -235,12 +235,19 @@ class HyperliquidAdapter(VenueAdapter):
                     {"limit": {"tif": "Ioc"}}, reduce_only=True,
                 )
             else:
+                # Live limits are submitted IOC (immediate-or-cancel), not GTC:
+                # the risk kernel only accounts for filled positions, so a
+                # resting order could later fill and breach caps. IOC executes
+                # the marketable portion and cancels the rest — nothing rests
+                # unreserved (fail-closed). The price is rounded to venue
+                # precision so it isn't rejected for tick-size.
+                px = self._round_px(order.limit_price)
                 resp = ex.order(
                     order.symbol,
                     is_buy,
                     size,
-                    order.limit_price,
-                    {"limit": {"tif": "Gtc"}},
+                    px,
+                    {"limit": {"tif": "Ioc"}},
                     reduce_only=order.reduce_only,
                 )
             return self._parse_response(order, resp)
