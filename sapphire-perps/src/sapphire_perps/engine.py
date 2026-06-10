@@ -66,12 +66,22 @@ class Engine:
         side = Side.LONG if delta_notional > 0 else Side.SHORT
         size = abs(delta_notional) / quote.mid
 
-        # If we're shrinking/closing existing exposure, mark reduce_only so the
-        # order can't accidentally flip into a larger opposite position.
+        # Mark reduce_only ONLY when this order purely shrinks the existing
+        # position without crossing zero (same-side smaller target, or a flat
+        # target that closes it). When the target crosses to the opposite side
+        # (e.g. +$10k long -> -$5k short), the order must flip — leaving it
+        # non-reduce-only so the full close+open executes and we actually reach
+        # the target, instead of a reduce_only order closing the long and
+        # silently dropping the intended short.
+        crossing = (
+            current_signed_notional != 0.0
+            and target_signed_notional != 0.0
+            and (current_signed_notional > 0) != (target_signed_notional > 0)
+        )
         reduce_only = (
             pos is not None
-            and pos.side is not side
-            and abs(target_signed_notional) <= abs(current_signed_notional)
+            and not crossing
+            and abs(target_signed_notional) < abs(current_signed_notional)
         )
         return Order(
             symbol=intent.symbol,

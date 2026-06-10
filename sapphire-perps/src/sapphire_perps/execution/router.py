@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from ..config import AppConfig
 from ..risk.kernel import RiskDecision, RiskKernel
-from ..types import Order, OrderResult, OrderStatus, Side
+from ..types import Order, OrderResult, OrderStatus, OrderType, Side
 from ..venues.base import VenueAdapter
 from .approval import ApprovalGate, AutoDenyGate
 
@@ -62,7 +62,14 @@ class OrderRouter:
         quote = adapter.get_quote(order.symbol)
         if quote is None:
             return self._reject(order, f"no quote for {order.symbol}", venue_name)
-        price = order.limit_price or quote.mid
+        # Evaluate risk at the price the order would actually execute at, not the
+        # mid: a market buy lifts the ask, a market sell hits the bid. Using the
+        # worst-case touch keeps notional/leverage caps honest (a fill can't
+        # sneak above a hard limit that was only checked at the mid).
+        if order.order_type is OrderType.LIMIT and order.limit_price is not None:
+            price = order.limit_price
+        else:
+            price = quote.ask if order.side is Side.LONG else quote.bid
 
         account = adapter.get_account()
         daily_pnl = self._session_pnl(account)

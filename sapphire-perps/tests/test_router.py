@@ -123,6 +123,21 @@ def test_non_perp_venue_rejects_perp_order():
     assert "does not support perps" in res.reason
 
 
+def test_market_risk_uses_executable_price():
+    # Wide spread so ask >> mid. An order whose notional is under the cap at the
+    # mid but over it at the ask must be rejected (risk uses the executable ask).
+    cfg = make_config()
+    cfg.risk.max_order_notional_usd = 10_000
+    venue = FakePaperVenue()
+    venue.broker.price_source = StaticPriceSource("fake", {"BTC": 100_000.0}, spread_bps=2_000)
+    router = make_router(cfg, {"fake": venue})
+    # spread_bps=2000 -> ask = 110,000. 0.0999 BTC is $9,990 at the mid (under
+    # the $10k cap) but $10,989 at the ask (over) -> must reject on the ask.
+    res = router.submit(Order("BTC", Side.LONG, 0.0999))
+    assert res.status is OrderStatus.REJECTED
+    assert "risk:" in res.reason
+
+
 def test_close_blocked_on_live_adapter_when_not_cleared():
     # Live adapter but system not cleared for live -> close must be rejected
     # before reaching the venue, mirroring submit()'s two-switch gate.

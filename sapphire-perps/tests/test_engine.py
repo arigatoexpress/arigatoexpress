@@ -78,3 +78,31 @@ def test_engine_run_bounded_steps():
     engine, _ = build(MomentumSignal(fast=2, slow=3))
     engine.config.poll_interval_s = 0  # don't sleep in tests
     engine.run(max_steps=3)  # should not raise
+
+
+class TargetSignal:
+    """A signal whose target can be changed between steps."""
+
+    name = "target"
+
+    def __init__(self, side, notional):
+        self.side, self.notional = side, notional
+
+    def evaluate(self, quotes, account):
+        return [Intent(s, self.side, self.notional, "test") for s in quotes]
+
+
+def test_engine_flips_across_zero_to_reach_target():
+    # +$10k long, then target -$5k short. The engine must flip (not reduce-only
+    # close and silently drop the short), ending at a $5k short = 0.05 BTC.
+    sig = TargetSignal(Side.LONG, 10_000.0)
+    engine, venue = build(sig)
+    engine.step()
+    assert venue.get_account().position_for("BTC").side is Side.LONG
+
+    sig.side, sig.notional = Side.SHORT, 5_000.0
+    engine.step()
+    pos = venue.get_account().position_for("BTC")
+    assert pos is not None, "engine dropped the short instead of flipping"
+    assert pos.side is Side.SHORT
+    assert abs(pos.size - 0.05) < 1e-6  # $5k / $100k
