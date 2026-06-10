@@ -71,6 +71,25 @@ class PaperBroker:
                 reason="reduce_only order with no open position",
             )
 
+        # A limit order only executes if it's marketable. A buy must cross the
+        # ask, a sell must cross the bid; otherwise it rests (PENDING) rather
+        # than filling at an impossible price. We don't model a resting book, so
+        # a non-marketable limit simply stays pending and applies no fill.
+        if order.order_type is OrderType.LIMIT and order.limit_price is not None:
+            marketable = (
+                order.limit_price >= quote.ask
+                if order.side is Side.LONG
+                else order.limit_price <= quote.bid
+            )
+            if not marketable:
+                return OrderResult(
+                    order=order,
+                    status=OrderStatus.PENDING,
+                    venue=self.venue,
+                    venue_order_id=f"paper-{order.client_id}",
+                    reason="limit not marketable; resting",
+                )
+
         fill_px = self._fill_price(order, quote)
         fill_size = order.size
         if order.reduce_only and existing is not None:

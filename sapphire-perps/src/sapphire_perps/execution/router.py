@@ -25,10 +25,20 @@ class OrderRouter:
     risk: RiskKernel
     config: AppConfig
     approval: ApprovalGate = field(default_factory=AutoDenyGate)
+    # Optional manual PnL offset added on top of the derived session PnL
+    # (e.g. to seed a known prior loss). Normally left at 0.0.
     daily_pnl: float = 0.0
+    # Per-venue equity captured on first sight, used as the session baseline so
+    # the daily-loss circuit breaker reflects real drawdown without an external
+    # caller having to feed it in.
+    _equity_baseline: dict[str, float] = field(default_factory=dict)
 
     def _resolve_venue(self, order: Order) -> str:
         return order.venue or self.config.default_venue
+
+    def _session_pnl(self, account) -> float:
+        baseline = self._equity_baseline.setdefault(account.venue, account.equity)
+        return (account.equity - baseline) + self.daily_pnl
 
     def _reject(self, order: Order, reason: str, venue: str = "") -> OrderResult:
         log.warning("order rejected: %s (%s)", reason, order.symbol)
@@ -55,8 +65,9 @@ class OrderRouter:
         price = order.limit_price or quote.mid
 
         account = adapter.get_account()
+        daily_pnl = self._session_pnl(account)
 
-        decision = self.risk.evaluate(order, price, account, self.daily_pnl)
+        decision = self.risk.evaluate(order, price, account, daily_pnl)
         if not decision.approved:
             return self._reject(
                 order, "risk: " + "; ".join(decision.reasons), venue_name

@@ -1,6 +1,6 @@
 import pytest
 
-from sapphire_perps.types import Order, OrderStatus, Side
+from sapphire_perps.types import Order, OrderStatus, OrderType, Side
 from sapphire_perps.venues.base import StaticPriceSource
 from sapphire_perps.venues.paper import PaperBroker
 
@@ -71,3 +71,21 @@ def test_close_position_helper(broker):
     res = broker.close_position("ETH")
     assert res.status is OrderStatus.FILLED
     assert broker.get_account().position_for("ETH") is None
+
+
+def test_non_marketable_limit_rests(broker):
+    # spread is 0, so ask == bid == 100k. A buy limit below the ask can't fill.
+    res = broker.place_order(
+        Order("BTC", Side.LONG, 1.0, order_type=OrderType.LIMIT, limit_price=99_000)
+    )
+    assert res.status is OrderStatus.PENDING
+    assert res.filled_size == 0.0
+    assert broker.get_account().position_for("BTC") is None
+
+
+def test_marketable_limit_fills(broker):
+    res = broker.place_order(
+        Order("BTC", Side.LONG, 1.0, order_type=OrderType.LIMIT, limit_price=100_000)
+    )
+    assert res.status is OrderStatus.FILLED
+    assert broker.get_account().position_for("BTC").size == 1.0

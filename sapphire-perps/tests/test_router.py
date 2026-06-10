@@ -121,3 +121,26 @@ def test_non_perp_venue_rejects_perp_order():
     res = router.submit(Order("BTC", Side.LONG, 0.1))
     assert res.status is OrderStatus.REJECTED
     assert "does not support perps" in res.reason
+
+
+def test_daily_loss_breaker_trips_from_derived_pnl():
+    # The router must derive session PnL itself (no external caller feeding it).
+    cfg = make_config()
+    cfg.risk.daily_loss_limit_usd = 5_000
+    venue = FakePaperVenue()
+    router = make_router(cfg, {"fake": venue})
+
+    # Open 1 BTC long @100k; baseline equity is captured here.
+    assert router.submit(Order("BTC", Side.LONG, 1.0)).status is OrderStatus.FILLED
+
+    # Price drops 10k -> unrealized -$10k, beyond the $5k daily loss limit.
+    venue.broker.price_source.set_price("BTC", 90_000.0)
+
+    # A new (non-reduce-only) order must now be blocked by the breaker...
+    blocked = router.submit(Order("BTC", Side.LONG, 0.1))
+    assert blocked.status is OrderStatus.REJECTED
+    assert "daily loss" in blocked.reason
+
+    # ...but a reduce-only de-risking order is still allowed through.
+    reduce = router.submit(Order("BTC", Side.SHORT, 0.5, reduce_only=True))
+    assert reduce.status is OrderStatus.FILLED
