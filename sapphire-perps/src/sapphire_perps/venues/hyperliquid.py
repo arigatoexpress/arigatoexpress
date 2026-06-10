@@ -176,6 +176,17 @@ class HyperliquidAdapter(VenueAdapter):
     # ------------------------------------------------------------------
     # live helpers (network paths — not exercised by the offline test suite)
     # ------------------------------------------------------------------
+    @staticmethod
+    def _round_px(px: float, max_decimals: int = 6) -> float:
+        """Round a price to Hyperliquid's precision rules so the venue doesn't
+        reject it. Perp prices allow up to 5 significant figures and at most 6
+        decimal places (integers are always allowed). We don't have per-asset
+        szDecimals here, so 5 sig figs + 6 decimals is the safe conservative cap.
+        """
+        if px <= 0:
+            return px
+        return round(float(f"{px:.5g}"), max_decimals)
+
     def _live_place_order(self, order: Order) -> OrderResult:  # pragma: no cover
         ex = self._exchange
         is_buy = order.side is Side.LONG
@@ -188,8 +199,8 @@ class HyperliquidAdapter(VenueAdapter):
                 # could flip/increase the position. Instead send an aggressive
                 # IOC limit with reduce_only=True so the venue enforces it.
                 mid = float(self._info.all_mids()[order.symbol])
-                px = mid * (1 + slippage) if is_buy else mid * (1 - slippage)
-                # NOTE: production should round px to the asset's tick size.
+                raw_px = mid * (1 + slippage) if is_buy else mid * (1 - slippage)
+                px = self._round_px(raw_px)
                 resp = ex.order(
                     order.symbol, is_buy, order.size, px,
                     {"limit": {"tif": "Ioc"}}, reduce_only=True,
