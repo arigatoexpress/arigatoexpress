@@ -19,6 +19,12 @@ export {
 export { PaperBroker } from "./venues/paper.js";
 export { HyperliquidAdapter } from "./venues/hyperliquid.js";
 export { LighterAdapter } from "./venues/lighter.js";
+export {
+  RobinhoodAdapter,
+  mapRobinhoodAccount,
+  type RobinhoodClient,
+  type RobinhoodSnapshot,
+} from "./venues/robinhood.js";
 export { type Intent, type Signal, signedTarget } from "./signals/base.js";
 export { CopyTradeSignal, type CloneTarget } from "./signals/copyTrade.js";
 export { Engine } from "./engine.js";
